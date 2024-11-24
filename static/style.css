@@ -1,0 +1,90 @@
+@import url('/cobalt.css');
+
+body {
+    display: flex;
+    min-height: 100vh;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: space-around;
+    flex-direction: column;
+    align-items: center;
+    margin: 0 6px;
+}
+
+a {
+    color: inherit;
+    text-underline-offset: 3px;
+}
+
+h1 {
+    text-align: center;
+}
+
+#imput-area {
+    display: flex;
+    box-shadow: 0 0 0 1.5px var(--input-border) inset;
+    border-radius: 11px;
+    gap: 10px;
+    flex: 1;
+    padding: 0 10px;
+    align-items: center;
+}
+
+#imput-area > svg {
+    min-width: 18px;
+    max-width: 18px;
+    height: 24px;
+}
+
+#download {
+    display: none;
+    font-size: 24px;
+    font-family: var(--cobalt-font), monospace;
+    font-weight: 400;
+    text-align: center;
+    text-indent: -5px;
+    letter-spacing: -5.3px;
+    background-color: transparent;
+    border: none;
+    border-left: 1.5px var(--input-border) solid;
+    padding: 0 6px 0 12px;
+    height: 36px;
+    color: var(--text);
+}
+
+#clear {
+    display: none;
+    padding: 3px;
+    border-radius: 100%;
+    background-color: var(--button-hover);
+    box-shadow: 0 0 0 1.5px var(--button-stroke) inset;
+    border: none;
+    height: 22px;
+}
+
+#clear > svg {
+    width: 16px;
+    height: 16px;
+    stroke: var(--text);
+}
+
+#imput-area > input {
+    background-color: transparent;
+    width: 100%;
+    color: var(--text);
+    font-family: var(--font), monospace;
+
+    border: none;
+    outline: none;
+    
+    margin: 0;
+    padding: 10px 0;
+}
+
+footer {
+    padding-bottom: 12px;
+}
+
+label {
+    display: none;
+}

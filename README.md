@@ -5,6 +5,7 @@ due to limitations, it can only download audio for now. i might host multiple in
 
 ## supported services
 - youtube
+- soundcloud
 
 ## api
 if you want you can use the `/getvideos` endpoint with the `url` parameter being the link to the playlist, e.g. https://www.youtube.com/playlist?list=PLXQAAGoKe2_tobF3ioyI86AghVLmhf8wd

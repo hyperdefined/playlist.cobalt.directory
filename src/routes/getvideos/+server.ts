@@ -7,16 +7,7 @@ const errorMessages = {
         "still keeps happening, report this on codeberg. "
 }
 
-async function getVideos(playlistUrl): Promise<Array<string> | Response> {
-    const playlistMatch = playlistUrl?.match(/PL[A-Za-z0-9_-]+/)
-
-    if (!playlistUrl) {
-        return new Response(errorMessages.noLink, { status: 400 })
-    } else if (!playlistMatch) {
-        return new Response(errorMessages.invalidLink, { status: 400 })
-    }
-
-    const playlistId = playlistMatch[0];
+async function getYouTubeVideos(playlistId: string): Promise<Array<string> | Response> {
     const playlist = await youtube.getPlaylist(playlistId);
     if (playlist) {
         await playlist.videos.next(0);
@@ -28,10 +19,24 @@ async function getVideos(playlistUrl): Promise<Array<string> | Response> {
 
 export async function GET({ url }) {
     try {
-        const playlistVideos = await getVideos(url.searchParams.get("url"));
+        const playlistUrl = await url.searchParams.get("url") || "";
+        if (playlistUrl == "") {
+            return new Response(errorMessages.noLink, { status: 400 })
+        }
+
+        const youtubeMatch = playlistUrl?.match(/PL[A-Za-z0-9_-]+/);
+        let playlistVideos;
+
+        if (youtubeMatch) {
+            playlistVideos = await getYouTubeVideos(youtubeMatch[0]);
+        } else {
+            return new Response(errorMessages.invalidLink, { status: 400 });
+        }
+
         if (playlistVideos instanceof Response) {
             return playlistVideos;
         }
+
         return new Response(JSON.stringify(playlistVideos), {
             headers: { "Content-Type": "application/json" },
         });

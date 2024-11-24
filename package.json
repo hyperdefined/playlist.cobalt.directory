@@ -20,6 +20,7 @@
 		"youtubei": "^1.6.7"
 	},
 	"dependencies": {
-		"@sveltejs/adapter-node": "^5.2.9"
+		"@sveltejs/adapter-node": "^5.2.9",
+		"soundcloud.ts": "^0.6.2"
 	}
 }

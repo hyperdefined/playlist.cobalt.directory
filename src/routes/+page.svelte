@@ -2,7 +2,7 @@
     import { onMount } from 'svelte';
 
     onMount(() => {
-        const cobaltapi = "https://cobalt-us.kwiatekmiki.com";
+        const cobaltapi = "https://cobalt-api.kwiatekmiki.com";
         const playlistinput = document.querySelector("#playlistid");
         const downloadbutton = document.querySelector("#download");
         const clearinput = document.querySelector("#clear");

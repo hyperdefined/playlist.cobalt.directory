@@ -1,7 +1,6 @@
 services:
   playlist:
-    build:
-      context: .
+    image: codeberg.org/kwiat/playlist
     container_name: playlist-downloader
     ports:
       # replace the first 3000 to change the port it's running on

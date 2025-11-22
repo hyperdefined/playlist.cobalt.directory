@@ -72,6 +72,14 @@
             }
         })
 
+        function safeDecode(str) {
+            try {
+                return decodeURIComponent(str);
+            } catch {
+                return str;
+            }
+        }
+
         async function downloadfrom(videolink = "") {
             console.log(`downloading ${videolink}`);
 
@@ -198,17 +206,17 @@
             if (cd && cd.includes("filename=")) {
                 const match = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
                 if (match && match[1]) {
-                    filename = decodeURIComponent(match[1]);
+                    filename = safeDecode(match[1]);
                 }
             } else {
                 try {
                     const u = new URL(fileUrl);
                     const last = u.pathname.split("/").pop();
                     if (last) {
-                        filename = last.split("?")[0] || filename;
+                        filename = safeDecode(last.split("?")[0] || filename);
                     }
                 } catch {
-                    // ignore, keep default
+                    // ignore, use default
                 }
             }
 

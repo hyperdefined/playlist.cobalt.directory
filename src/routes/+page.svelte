@@ -2,18 +2,37 @@
     import { onMount } from 'svelte';
 
     onMount(() => {
-        const cobaltapi = "https://cobalt-api.kwiatekmiki.com";
+        const cobaltapi = "https://cobalt-backend.canine.tools";
+        const key = "6d78768f-f054-49e6-bace-868620cbb069"; // this key is bound to my server IP only
         const playlistinput = document.querySelector("#playlistid");
         const downloadbutton = document.querySelector("#download");
         const clearinput = document.querySelector("#clear");
+        const modeButtons = document.querySelectorAll("#mode-buttons button");
+        let selectedMode = "video";
 
-        clearinput.addEventListener('click', function() {
+        modeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                modeButtons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                selectedMode = btn.dataset.mode;
+            });
+        });
+
+        clearinput.addEventListener('click', function () {
             playlistinput.value = "";
-        })
+            cancelAll("Download cancelled.");
+        });
 
         downloadbutton.addEventListener('click', function() {
             startDownloading()
         })
+
+        playlistinput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                startDownloading();
+            }
+        });
 
         playlistinput.addEventListener('input', function() {
             const inputvalue = playlistinput.value;
@@ -35,27 +54,57 @@
 
         async function downloadfrom(videolink = "") {
             console.log(`downloading ${videolink}`);
-            const response = await fetch(cobaltapi, {
-                method: "POST",
-                headers: {
-                    "User-Agent": "cobalt-playlist-downloader/1.0",
-                    "Accept": "application/json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    "url": videolink,
-                    // TODO: let the user change settings
-                    "filenameStyle": "basic",
-                    "downloadMode": "audio", // v10
-                    // "isAudioOnly": true, // v7
-                })
-            })
 
-            const responsejson = await response.json();
+            if (cancelled) return;
+
+            const mode = selectedMode || "video";
+            const body = {
+                url: videolink,
+                filenameStyle: "basic"
+            };
+
+            if (mode === "audio") {
+                body.downloadMode = "audio";
+            }
+
+            let response;
+            try {
+                response = await fetch(cobaltapi, {
+                    method: "POST",
+                    headers: {
+                        "User-Agent": "cobalt-playlist-downloader/1.0",
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "Authorization": "api-key " + key, 
+                    },
+                    body: JSON.stringify(body)
+                });
+            } catch (err) {
+                console.error("network error while contacting cobalt:", err);
+                cancelAll(`Network error while contacting Cobalt:\n${err.message}`);
+                return;
+            }
+
+            if (!response.ok) {
+                const text = await response.text().catch(() => "");
+                console.error("cobalt returned status:", response.status, text);
+                cancelAll(`cobalt returned an error: ${response.status}\n${text || "No response body"}`);
+                return;
+            }
+
+            let responsejson;
+            try {
+                responsejson = await response.json();
+            } catch (err) {
+                console.error("failed to parse cobalt response:", err);
+                cancelAll("cobalt returned invalid json");
+                return;
+            }
 
             if (responsejson.status === "error") {
-                const error = responsejson?.error.code;
-                console.log(`can't download ${videolink}: ${error}`);
+                const code = responsejson?.error?.code || "unknown_error";
+                console.log(`can't download ${videolink}: ${code}`);
+                cancelAll(`cobalt failed to download video ${videolink} because:\n${code}`);
                 return;
             }
 
@@ -63,40 +112,72 @@
                 window.location = responsejson.url;
             } else {
                 console.log(`can't download ${videolink}, cobalt didn't return a url`);
+                cancelAll("cobalt didn't return a download URL for one of the videos.");
             }
         }
 
+        let timers = [];
+        let cancelled = false;
+
+        function cancelAll(reason) {
+            cancelled = true;
+
+            timers.forEach(t => clearTimeout(t));
+            timers = [];
+
+            downloadbutton.disabled = false;
+            downloadbutton.innerText = ">>";
+            alert(reason);
+        }
+
         async function startDownloading() {
+            cancelled = false;
+            timers = [];
+
             downloadbutton.disabled = true;
             downloadbutton.innerText = "...";
-            const playlisturl = playlistid.value;
+
+            const playlisturl = playlistinput.value;
             const response = await fetch("/getvideos?url=" + playlisturl);
+
             let videolinks = {};
             const responsetext = await response.text();
+
             try {
                 videolinks = JSON.parse(responsetext);
             } catch {
                 alert(responsetext);
-
-                downloadbutton.innerText = "!!"
+                downloadbutton.innerText = "!!";
                 setTimeout(() => {
-                    downloadbutton.innerText = ">>"
+                    downloadbutton.innerText = ">>";
                     downloadbutton.disabled = false;
-                }, 1000)
+                }, 1000);
                 return;
             }
 
             downloadbutton.innerText = "..?";
 
-            videolinks.forEach(function(videolink, index) {
-                setTimeout(() => {
-                    downloadfrom(videolink);
-                    downloadbutton.innerText = ">>>";
-                }, index * 5000)
-            })
+            function sleep(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
 
-            downloadbutton.innerText = ">>"
-            downloadbutton.disabled = false;
+             for (let i = 0; i < videolinks.length; i++) {
+                if (cancelled) break;
+
+                const videolink = videolinks[i];
+                downloadbutton.innerText = `>> ${i + 1}/${videolinks.length}`;
+
+                await downloadfrom(videolink);
+
+                if (cancelled) break;
+
+                await sleep(5000);
+            }
+
+            if (!cancelled) {
+                downloadbutton.innerText = ">>";
+                downloadbutton.disabled = false;
+            }
         }
 
         downloadbutton.focus();
@@ -106,6 +187,11 @@
 <header></header>
 <div id="con">
     <h1>cobalt playlist downloader</h1>
+    <p>this site is very experimental! this site is a fork of <a href="https://codeberg.org/kwiat/playlist">kwiat's playlist downloader</a> with fixes and improvements.</p>
+    <p>supports <strong>youtube</strong> and <strong>soundcloud</strong> playlists. uses <strong>cobalt.canine.tools</strong> as the cobalt api.</p>
+    <hr>
+    <p>!!! VIDEOS/AUDIOS MIGHT BE BROKEN !!!</p>
+    <p>cobalt encodes the video/audio data via web. this tool downloads right from the api, which skips this part. playback of media will be broken, visit <a href="https://cobalt.tools">cobalt.tools</a> and use the remux tab to fix.</p>
     <div id="download-area">
         <div id="imput-area">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="tabler-icon tabler-icon-link "><path d="M9 15l6 -6"></path><path d="M11 6l.463 -.536a5 5 0 0 1 7.071 7.072l-.534 .464"></path><path d="M13 18l-.397 .534a5.068 5.068 0 0 1 -7.127 0a4.972 4.972 0 0 1 0 -7.071l.524 -.463"></path></svg>
@@ -118,11 +204,18 @@
                 &gt;&gt;
             </button>
         </div>
+        <div id="mode-buttons">
+            <button data-mode="video" class="selected">video</button>
+            <button data-mode="audio">audio</button>
+        </div>
     </div>
 </div>
 <footer>
     <a href="https://codeberg.org/kwiat/playlist">
-        source code
+        original source code
+    </a>
+    <a href="https://github.com/hyperdefined/playlist.cobalt.directory">
+        fork source code
     </a>
 </footer>
 

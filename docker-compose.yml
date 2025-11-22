@@ -4,4 +4,4 @@ services:
     container_name: playlist-downloader
     ports:
       # replace the first 3000 to change the port it's running on
-      - '3000:3000'
+      - "3000:3000"

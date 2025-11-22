@@ -1,5 +1,5 @@
-import { redirect } from '@sveltejs/kit';
+import { redirect } from "@sveltejs/kit";
 
 export function load({ url }) {
-    redirect(307, `/getvideos${url.search}`);
+  redirect(307, `/getvideos${url.search}`);
 }

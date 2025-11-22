@@ -1,90 +1,126 @@
-@import url('/cobalt.css');
+@import url("/cobalt.css");
 
 body {
-    display: flex;
-    min-height: 100vh;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-content: space-around;
-    flex-direction: column;
-    align-items: center;
-    margin: 0 6px;
+  display: flex;
+  min-height: 100vh;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-content: space-around;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 6px;
 }
 
 a {
-    color: inherit;
-    text-underline-offset: 3px;
+  color: inherit;
+  text-underline-offset: 3px;
 }
 
 h1 {
-    text-align: center;
+  text-align: center;
 }
 
 #imput-area {
-    display: flex;
-    box-shadow: 0 0 0 1.5px var(--input-border) inset;
-    border-radius: 11px;
-    gap: 10px;
-    flex: 1;
-    padding: 0 10px;
-    align-items: center;
+  display: flex;
+  box-shadow: 0 0 0 1.5px var(--input-border) inset;
+  border-radius: 11px;
+  gap: 10px;
+  flex: 1;
+  padding: 0 10px;
+  align-items: center;
 }
 
 #imput-area > svg {
-    min-width: 18px;
-    max-width: 18px;
-    height: 24px;
+  min-width: 18px;
+  max-width: 18px;
+  height: 24px;
 }
 
 #download {
-    display: none;
-    font-size: 24px;
-    font-family: var(--cobalt-font), monospace;
-    font-weight: 400;
-    text-align: center;
-    text-indent: -5px;
-    letter-spacing: -5.3px;
-    background-color: transparent;
-    border: none;
-    border-left: 1.5px var(--input-border) solid;
-    padding: 0 6px 0 12px;
-    height: 36px;
-    color: var(--text);
+  display: none;
+  font-size: 24px;
+  font-family: var(--cobalt-font), monospace;
+  font-weight: 400;
+  text-align: center;
+  text-indent: -5px;
+  letter-spacing: -5.3px;
+  background-color: transparent;
+  border: none;
+  border-left: 1.5px var(--input-border) solid;
+  padding: 0 6px 0 12px;
+  height: 36px;
+  color: var(--text);
 }
 
 #clear {
-    display: none;
-    padding: 3px;
-    border-radius: 100%;
-    background-color: var(--button-hover);
-    box-shadow: 0 0 0 1.5px var(--button-stroke) inset;
-    border: none;
-    height: 22px;
+  display: none;
+  padding: 3px;
+  border-radius: 100%;
+  background-color: var(--button-hover);
+  box-shadow: 0 0 0 1.5px var(--button-stroke) inset;
+  border: none;
+  height: 22px;
 }
 
 #clear > svg {
-    width: 16px;
-    height: 16px;
-    stroke: var(--text);
+  width: 16px;
+  height: 16px;
+  stroke: var(--text);
 }
 
 #imput-area > input {
-    background-color: transparent;
-    width: 100%;
-    color: var(--text);
-    font-family: var(--font), monospace;
+  background-color: transparent;
+  width: 100%;
+  color: var(--text);
+  font-family: var(--font), monospace;
 
-    border: none;
-    outline: none;
-    
-    margin: 0;
-    padding: 10px 0;
+  border: none;
+  outline: none;
+
+  margin: 0;
+  padding: 10px 0;
 }
 
 footer {
-    padding-bottom: 12px;
+  padding-bottom: 12px;
+}
+
+#mode-buttons {
+  margin-top: 14px;
+  display: inline-flex;
+  background-color: #111;
+  border-radius: 12px;
+  padding: 3px;
+  gap: 0;
+}
+
+#mode-buttons button {
+  background: transparent;
+  border: none;
+  color: #ccc;
+  padding: 6px 16px;
+  cursor: pointer;
+  border-radius: 10px;
+  font-size: 14px;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+#mode-buttons button:hover {
+  background: #222;
+}
+
+#mode-buttons button.selected {
+  background: #eee;
+  color: #000;
 }
 
 label {
-    display: none;
+  display: none;
+}
+
+#con {
+  max-width: 600px;
+  padding: 20px;
 }

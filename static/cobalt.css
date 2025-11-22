@@ -1,47 +1,48 @@
-@import url('/font.css');
+@import url("/font.css");
 
 :root {
-    --font: IBM Plex Mono, Noto Sans Mono Variable, Noto Sans Mono, monospace;
-    --cobalt-font: Noto Sans Mono Variable, Noto Sans Mono, IBM Plex Mono, monospace;
-    --background: #000000;
-    --text: #e1e1e1;
-    --input-border: #383838;
-    --button-hover: #2a2a2a;
-    --button-stroke: rgba(255, 255, 255, .05);
-    --white: #ffffff;
-    --red: #ed2236;
-    --dark-red: #d61c2e;
-    --gray: #818181;
-    --blue: #2a7ce1;
-    --green: #37aa42;
-    --button: #191919;
+  --font: IBM Plex Mono, Noto Sans Mono Variable, Noto Sans Mono, monospace;
+  --cobalt-font:
+    Noto Sans Mono Variable, Noto Sans Mono, IBM Plex Mono, monospace;
+  --background: #000000;
+  --text: #e1e1e1;
+  --input-border: #383838;
+  --button-hover: #2a2a2a;
+  --button-stroke: rgba(255, 255, 255, 0.05);
+  --white: #ffffff;
+  --red: #ed2236;
+  --dark-red: #d61c2e;
+  --gray: #818181;
+  --blue: #2a7ce1;
+  --green: #37aa42;
+  --button: #191919;
 }
 
 @media (prefers-color-scheme: light) {
-    :root {
-        --background: #ffffff;
-        --text: #282828;
-        --input-border: #adadb7;
-        --button-hover: #e8e8e8;
-        --button-stroke: rgba(0, 0, 0, .06);
-        --gray: #75757e;
-        --green: #51cf5e;
-        --blue: #2f8af9;
-    }
+  :root {
+    --background: #ffffff;
+    --text: #282828;
+    --input-border: #adadb7;
+    --button-hover: #e8e8e8;
+    --button-stroke: rgba(0, 0, 0, 0.06);
+    --gray: #75757e;
+    --green: #51cf5e;
+    --blue: #2f8af9;
+  }
 }
 
 body {
-    background-color: var(--background);
-    color: var(--text);
-    font-family: var(--font), monospace;
+  background-color: var(--background);
+  color: var(--text);
+  font-family: var(--font), monospace;
 
-    font-size: 14px;
+  font-size: 14px;
 }
 
 a {
-    text-underline-offset: 3px;
+  text-underline-offset: 3px;
 }
 
 .gray {
-    color: var(--gray);
+  color: var(--gray);
 }

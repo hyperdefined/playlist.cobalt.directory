@@ -10,6 +10,27 @@
         const modeButtons = document.querySelectorAll("#mode-buttons button");
         let selectedMode = "video";
 
+        const countLabel = document.querySelector("#download-count");
+        const progressBar = document.querySelector("#progress-bar");
+        const statusContainer = document.querySelector("#download-status");
+
+        function setProgress(percent) {
+            if (!progressBar) return;
+            if (percent < 0) percent = 0;
+            if (percent > 100) percent = 100;
+            progressBar.style.width = `${percent}%`;
+        }
+
+        function showStatus() {
+            if (statusContainer) statusContainer.style.display = "block";
+        }
+
+        function hideStatus() {
+            if (statusContainer) statusContainer.style.display = "none";
+            if (countLabel) countLabel.textContent = "";
+            setProgress(0);
+        }
+
         modeButtons.forEach(btn => {
             btn.addEventListener("click", () => {
                 modeButtons.forEach(b => b.classList.remove("selected"));
@@ -21,7 +42,6 @@
 
         clearinput.addEventListener('click', function () {
             playlistinput.value = "";
-            cancelAll("Download cancelled.");
         });
 
         downloadbutton.addEventListener('click', function() {
@@ -75,13 +95,13 @@
                         "User-Agent": "cobalt-playlist-downloader/1.0",
                         "Accept": "application/json",
                         "Content-Type": "application/json",
-                        "Authorization": "api-key " + key, 
+                        "Authorization": "api-key " + key,
                     },
                     body: JSON.stringify(body)
                 });
             } catch (err) {
                 console.error("network error while contacting cobalt:", err);
-                cancelAll(`Network error while contacting Cobalt:\n${err.message}`);
+                cancelAll(`network error while contacting cobalt:\n${err.message}`);
                 return;
             }
 
@@ -92,50 +112,138 @@
                 return;
             }
 
-            let responsejson;
+            let data;
             try {
-                responsejson = await response.json();
+                data = await response.json();
             } catch (err) {
                 console.error("failed to parse cobalt response:", err);
                 cancelAll("cobalt returned invalid json");
                 return;
             }
 
-            if (responsejson.status === "error") {
-                const code = responsejson?.error?.code || "unknown_error";
+            if (data.status === "error") {
+                const code = data?.error?.code || "unknown_error";
                 console.log(`can't download ${videolink}: ${code}`);
                 cancelAll(`cobalt failed to download video ${videolink} because:\n${code}`);
                 return;
             }
 
-            if (responsejson.url) {
-                window.location = responsejson.url;
-            } else {
+            if (!data.url) {
                 console.log(`can't download ${videolink}, cobalt didn't return a url`);
                 cancelAll("cobalt didn't return a download URL for one of the videos.");
+                return;
             }
-        }
 
-        let timers = [];
+            const fileUrl = data.url;
+
+            let fileResponse;
+            try {
+                fileResponse = await fetch(fileUrl);
+            } catch (err) {
+                console.error("error fetching file URL:", err);
+                cancelAll(`Failed to download file:\n${err.message}`);
+                return;
+            }
+
+            if (!fileResponse.ok) {
+                console.error("file response not OK:", fileResponse.status);
+                cancelAll(`File download failed: HTTP ${fileResponse.status}`);
+                return;
+            }
+
+            const estHeader = fileResponse.headers.get("estimated-content-length");
+            const lenHeader = fileResponse.headers.get("content-length");
+            const totalBytes = estHeader
+                ? parseInt(estHeader, 10)
+                : lenHeader
+                    ? parseInt(lenHeader, 10)
+                    : null;
+
+            if (!fileResponse.body) {
+                cancelAll("Your browser does not support streaming responses.");
+                return;
+            }
+
+            const reader = fileResponse.body.getReader();
+            const chunks = [];
+            let received = 0;
+
+            try {
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    chunks.push(value);
+                    received += value.length;
+
+                    if (totalBytes && !isNaN(totalBytes) && totalBytes > 0) {
+                        const percent = Math.round((received / totalBytes) * 100);
+                        setProgress(percent);
+                    }
+                }
+            } catch (err) {
+                console.error("error reading stream:", err);
+                cancelAll("Error while downloading file data.");
+                return;
+            }
+
+            if (!totalBytes) {
+                setProgress(100);
+            }
+
+            const blob = new Blob(chunks);
+
+            let filename = "download";
+            const cd = fileResponse.headers.get("Content-Disposition");
+            if (cd && cd.includes("filename=")) {
+                const match = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+                if (match && match[1]) {
+                    filename = decodeURIComponent(match[1]);
+                }
+            } else {
+                try {
+                    const u = new URL(fileUrl);
+                    const last = u.pathname.split("/").pop();
+                    if (last) {
+                        filename = last.split("?")[0] || filename;
+                    }
+                } catch {
+                    // ignore, keep default
+                }
+            }
+
+            const objectUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = objectUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+
+            URL.revokeObjectURL(objectUrl);
+            console.log(`finished downloading ${videolink} -> ${filename}`);
+        }
         let cancelled = false;
 
         function cancelAll(reason) {
             cancelled = true;
 
-            timers.forEach(t => clearTimeout(t));
-            timers = [];
-
             downloadbutton.disabled = false;
             downloadbutton.innerText = ">>";
+
+            hideStatus();
+
             alert(reason);
         }
 
         async function startDownloading() {
             cancelled = false;
-            timers = [];
 
             downloadbutton.disabled = true;
             downloadbutton.innerText = "...";
+
+            showStatus();
+            setProgress(0);
 
             const playlisturl = playlistinput.value;
             const response = await fetch("/getvideos?url=" + playlisturl);
@@ -155,26 +263,28 @@
                 return;
             }
 
-            downloadbutton.innerText = "..?";
-
-            function sleep(ms) {
-                return new Promise(resolve => setTimeout(resolve, ms));
+            if (!Array.isArray(videolinks)) {
+                alert("Server did not return a list of videos.");
+                downloadbutton.disabled = false;
+                downloadbutton.innerText = ">>";
+                return;
             }
 
-             for (let i = 0; i < videolinks.length; i++) {
-                if (cancelled) break;
+            for (let i = 0; i < videolinks.length; i++) {
+                if (cancelled) break; // user cancelled or error triggered
 
                 const videolink = videolinks[i];
-                downloadbutton.innerText = `>> ${i + 1}/${videolinks.length}`;
-
+                if (countLabel) {
+                    countLabel.textContent = `Downloading ${i + 1} of ${videolinks.length}…`;
+                }
+                setProgress(0)
                 await downloadfrom(videolink);
 
                 if (cancelled) break;
-
-                await sleep(5000);
             }
 
             if (!cancelled) {
+                hideStatus();
                 downloadbutton.innerText = ">>";
                 downloadbutton.disabled = false;
             }
@@ -207,6 +317,12 @@
         <div id="mode-buttons">
             <button data-mode="video" class="selected">video</button>
             <button data-mode="audio">audio</button>
+        </div>
+        <div id="download-status">
+            <div id="download-count"></div>
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
         </div>
     </div>
 </div>

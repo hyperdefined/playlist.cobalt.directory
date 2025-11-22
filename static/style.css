@@ -124,3 +124,33 @@ label {
   max-width: 600px;
   padding: 20px;
 }
+
+#download-status {
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
+  color: #ccc;
+  text-align: center;
+  display: none;
+}
+
+#download-count {
+  margin-bottom: 0.25rem;
+}
+
+#progress-bar-container {
+  width: 100%;
+  max-width: 400px;
+  height: 8px;
+  background: #222;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #4ade80;
+  border-radius: 999px;
+  transition: width 0.15s linear;
+}

@@ -61,8 +61,6 @@ export async function GET({ url }) {
       return playlistVideos;
     }
 
-    console.log(playlistVideos);
-
     return new Response(JSON.stringify(playlistVideos), {
       headers: { "Content-Type": "application/json" },
     });

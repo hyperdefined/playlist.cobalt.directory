@@ -1,13 +1,24 @@
-import { COBALT_API_KEY } from "$env/static/private";
+import { env } from "$env/dynamic/private";
+import { json } from "@sveltejs/kit";
+
+const COBALT_API_KEY = env.COBALT_API_KEY;
 
 export async function POST({ request, fetch }) {
+  if (!COBALT_API_KEY) {
+    console.error("COBALT_API_KEY is not set!!");
+    return json(
+            { status: "error", error: { code: "missing_api_key", message: "COBALT_API_KEY is missing, unable to make any requests to cobalt." } },
+            { status: 500 }
+        );
+  }
+
   const payload = await request.json();
 
   const cobaltRes = await fetch("https://cobalt-backend.canine.tools", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Accept": "application/json",
+      Accept: "application/json",
       Authorization: `api-key ${COBALT_API_KEY}`,
     },
     body: JSON.stringify(payload),

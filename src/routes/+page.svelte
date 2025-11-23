@@ -11,6 +11,7 @@
         const countLabel = document.querySelector("#download-count");
         const progressBar = document.querySelector("#progress-bar");
         const statusContainer = document.querySelector("#download-status");
+        const currentFilenameLabel = document.querySelector("#current-filename");
 
         function setProgress(percent) {
             if (!progressBar) return;
@@ -26,7 +27,34 @@
         function hideStatus() {
             if (statusContainer) statusContainer.style.display = "none";
             if (countLabel) countLabel.textContent = "";
+            if (currentFilenameLabel) currentFilenameLabel.textContent = "";
             setProgress(0);
+        }
+
+        function isValidPlaylistUrl(input) {
+            if (!input || !input.startsWith("https://")) return false;
+
+            let url;
+            try {
+                url = new URL(input);
+            } catch {
+                return false;
+            }
+
+            const host = url.hostname.toLowerCase();
+
+            if (
+                host.includes("youtube.com") ||
+                host.includes("youtu.be")
+            ) {
+                return url.searchParams.has("list");
+            }
+
+            if (host.includes("soundcloud.com")) {
+                return url.pathname.includes("/sets/");
+            }
+
+            return false;
         }
 
         modeButtons.forEach(btn => {
@@ -40,30 +68,54 @@
 
         clearinput.addEventListener('click', function () {
             playlistinput.value = "";
+
+            if (downloadbutton.disabled) {
+                cancelled = true;
+
+                if (currentDownloadAbortController) {
+                    try {
+                        currentDownloadAbortController.abort();
+                    } catch (e) {
+                        console.warn("Abort failed:", e);
+                    }
+                }
+
+                downloadbutton.disabled = false;
+                downloadbutton.innerText = ">>";
+                hideStatus();
+            }
         });
 
-        downloadbutton.addEventListener('click', function() {
+        downloadbutton.addEventListener("click", () => {
+            const value = playlistinput.value.trim();
+
+            if (!isValidPlaylistUrl(value)) {
+                alert("Please enter a valid YouTube or SoundCloud playlist link.");
+                return;
+            }
+
             startDownloading();
         });
 
         playlistinput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
+                const value = playlistinput.value.trim();
+
+                if (!isValidPlaylistUrl(value)) {
+                    alert("Please enter a valid YouTube or SoundCloud playlist link.");
+                    return;
+                }
+
                 startDownloading();
             }
         });
 
-        playlistinput.addEventListener('input', function() {
-            const inputvalue = playlistinput.value;
-            if (inputvalue.length > 0) {
+        playlistinput.addEventListener("input", () => {
+            const value = playlistinput.value.trim();
+
+            if (value.length > 0) {
                 clearinput.style.display = "unset";
-                if (
-                    inputvalue.startsWith("https:") &&
-                    inputvalue.length > 6
-                ) {
-                    downloadbutton.style.display = "unset";
-                } else {
-                    downloadbutton.style.display = "none";
-                }
+                downloadbutton.style.display = isValidPlaylistUrl(value) ? "unset" : "none";
             } else {
                 clearinput.style.display = "none";
                 downloadbutton.style.display = "none";
@@ -83,6 +135,7 @@
         }
 
         let cancelled = false;
+        let currentDownloadAbortController = null;
 
         async function downloadfrom(videolink = "", attempt = 1) {
             const MAX_RETRIES = 3;
@@ -185,8 +238,17 @@
 
             let fileResponse;
             try {
-                fileResponse = await fetch(fileUrl);
+                currentDownloadAbortController = new AbortController();
+
+                fileResponse = await fetch(fileUrl, {
+                    signal: currentDownloadAbortController.signal
+                });
             } catch (err) {
+                if (err.name === "AbortError") {
+                    console.log("Download aborted by user");
+                    return;
+                }
+
                 console.error("error fetching file URL:", err);
                 cancelAll(`Failed to download file:\n${err.message}`);
                 return;
@@ -196,6 +258,29 @@
                 console.error("file response not OK:", fileResponse.status);
                 cancelAll(`File download failed: HTTP ${fileResponse.status}`);
                 return;
+            }
+
+            let filename = "download";
+            const cd = fileResponse.headers.get("Content-Disposition");
+            if (cd && cd.includes("filename=")) {
+                const match = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
+                if (match && match[1]) {
+                    filename = safeDecode(match[1]);
+                }
+            } else {
+                try {
+                    const u = new URL(fileUrl);
+                    const last = u.pathname.split("/").pop();
+                    if (last) {
+                        filename = safeDecode(last.split("?")[0] || filename);
+                    }
+                } catch {
+                    // ignore, use default
+                }
+            }
+
+            if (currentFilenameLabel) {
+                currentFilenameLabel.textContent = filename;
             }
 
             const estHeader = fileResponse.headers.get("estimated-content-length");
@@ -220,6 +305,11 @@
                     const { done, value } = await reader.read();
                     if (done) break;
 
+                    if (cancelled) {
+                        console.log("Cancelled during stream, stopping before save");
+                        return;
+                    }
+
                     chunks.push(value);
                     received += value.length;
 
@@ -229,6 +319,11 @@
                     }
                 }
             } catch (err) {
+                if (err.name === "AbortError") {
+                    console.log("Stream read aborted");
+                    return;
+                }
+
                 console.error("error reading stream:", err);
                 cancelAll("Error while downloading file data.");
                 return;
@@ -238,27 +333,12 @@
                 setProgress(100);
             }
 
-            const blob = new Blob(chunks);
-
-            let filename = "download";
-            const cd = fileResponse.headers.get("Content-Disposition");
-            if (cd && cd.includes("filename=")) {
-                const match = cd.match(/filename\*?=(?:UTF-8'')?["']?([^"';]+)["']?/i);
-                if (match && match[1]) {
-                    filename = safeDecode(match[1]);
-                }
-            } else {
-                try {
-                    const u = new URL(fileUrl);
-                    const last = u.pathname.split("/").pop();
-                    if (last) {
-                        filename = safeDecode(last.split("?")[0] || filename);
-                    }
-                } catch {
-                    // ignore, use default
-                }
+            if (cancelled) {
+                console.log("Cancelled after download; skipping save");
+                return;
             }
 
+            const blob = new Blob(chunks);
             const objectUrl = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = objectUrl;
@@ -269,6 +349,7 @@
 
             URL.revokeObjectURL(objectUrl);
             console.log(`finished downloading ${videolink} -> ${filename}`);
+            currentDownloadAbortController = null;
         }
 
         function cancelAll(reason) {
@@ -290,6 +371,7 @@
 
             showStatus();
             setProgress(0);
+            if (currentFilenameLabel) currentFilenameLabel.textContent = "";
 
             const playlisturl = playlistinput.value;
             const response = await fetch("/getvideos?url=" + playlisturl);
@@ -323,6 +405,7 @@
                 if (countLabel) {
                     countLabel.textContent = `Downloading ${i + 1} of ${videolinks.length}…`;
                 }
+                if (currentFilenameLabel) currentFilenameLabel.textContent = "";
                 setProgress(0);
                 await downloadfrom(videolink);
 
@@ -369,6 +452,7 @@
             <div id="progress-bar-container">
                 <div id="progress-bar"></div>
             </div>
+            <div id="current-filename"></div>
         </div>
     </div>
 </div>

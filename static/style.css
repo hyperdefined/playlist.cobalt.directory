@@ -154,3 +154,11 @@ label {
   border-radius: 999px;
   transition: width 0.15s linear;
 }
+
+#current-filename {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    opacity: 0.8;
+    text-align: center;
+    word-break: break-all;
+}

@@ -2,8 +2,6 @@
     import { onMount } from 'svelte';
 
     onMount(() => {
-        const cobaltapi = "https://cobalt-backend.canine.tools";
-        const key = "6d78768f-f054-49e6-bace-868620cbb069"; // this key is bound to my server IP only
         const playlistinput = document.querySelector("#playlistid");
         const downloadbutton = document.querySelector("#download");
         const clearinput = document.querySelector("#clear");
@@ -45,8 +43,8 @@
         });
 
         downloadbutton.addEventListener('click', function() {
-            startDownloading()
-        })
+            startDownloading();
+        });
 
         playlistinput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
@@ -70,7 +68,7 @@
                 clearinput.style.display = "none";
                 downloadbutton.style.display = "none";
             }
-        })
+        });
 
         function safeDecode(str) {
             try {
@@ -83,6 +81,8 @@
         function sleep(ms) {
             return new Promise((resolve) => setTimeout(resolve, ms));
         }
+
+        let cancelled = false;
 
         async function downloadfrom(videolink = "", attempt = 1) {
             const MAX_RETRIES = 3;
@@ -104,19 +104,17 @@
 
             let response;
             try {
-                response = await fetch(cobaltapi, {
+                response = await fetch("/api/cobalt", {
                     method: "POST",
                     headers: {
-                        "User-Agent": "cobalt-playlist-downloader/1.0",
                         "Accept": "application/json",
-                        "Content-Type": "application/json",
-                        "Authorization": "api-key " + key,
+                        "Content-Type": "application/json"
                     },
                     body: JSON.stringify(body)
                 });
             } catch (err) {
-                console.error("network error while contacting cobalt:", err);
-                cancelAll(`network error while contacting cobalt:\n${err.message}`);
+                console.error("network error while contacting backend:", err);
+                cancelAll(`network error while contacting backend:\n${err.message}`);
                 return;
             }
 
@@ -124,7 +122,7 @@
                 const text = await response.text().catch(() => "");
 
                 if (response.status === 429) {
-                    console.warn("cobalt rate limit hit (HTTP 429):", text);
+                    console.warn("backend/cobalt rate limit hit (HTTP 429):", text);
 
                     if (attempt >= MAX_RETRIES) {
                         cancelAll("cobalt rate limit exceeded multiple times. please try again later.");
@@ -140,8 +138,8 @@
                     return downloadfrom(videolink, attempt + 1);
                 }
 
-                console.error("cobalt returned status:", response.status, text);
-                cancelAll(`cobalt returned an error: ${response.status}\n${text || "No response body"}`);
+                console.error("backend returned status:", response.status, text);
+                cancelAll(`backend returned an error: ${response.status}\n${text || "No response body"}`);
                 return;
             }
 
@@ -149,8 +147,8 @@
             try {
                 data = await response.json();
             } catch (err) {
-                console.error("failed to parse cobalt response:", err);
-                cancelAll("cobalt returned invalid json");
+                console.error("failed to parse backend response:", err);
+                cancelAll("backend returned invalid json");
                 return;
             }
 
@@ -178,7 +176,7 @@
             }
 
             if (!data.url) {
-                console.log(`can't download ${videolink}, cobalt didn't return a url`);
+                console.log(`can't download ${videolink}, backend/cobalt didn't return a url`);
                 cancelAll("cobalt didn't return a download URL for one of the videos.");
                 return;
             }
@@ -272,7 +270,6 @@
             URL.revokeObjectURL(objectUrl);
             console.log(`finished downloading ${videolink} -> ${filename}`);
         }
-        let cancelled = false;
 
         function cancelAll(reason) {
             cancelled = true;
@@ -326,7 +323,7 @@
                 if (countLabel) {
                     countLabel.textContent = `Downloading ${i + 1} of ${videolinks.length}…`;
                 }
-                setProgress(0)
+                setProgress(0);
                 await downloadfrom(videolink);
 
                 if (cancelled) break;
@@ -340,7 +337,7 @@
         }
 
         downloadbutton.focus();
-    })
+    });
 </script>
 
 <header></header>

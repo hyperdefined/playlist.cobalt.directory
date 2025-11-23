@@ -80,8 +80,15 @@
             }
         }
 
-        async function downloadfrom(videolink = "") {
-            console.log(`downloading ${videolink}`);
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        async function downloadfrom(videolink = "", attempt = 1) {
+            const MAX_RETRIES = 3;
+            const BACKOFF_MS = 5000;
+
+            console.log(`downloading ${videolink} (attempt ${attempt})`);
 
             if (cancelled) return;
 
@@ -115,6 +122,24 @@
 
             if (!response.ok) {
                 const text = await response.text().catch(() => "");
+
+                if (response.status === 429) {
+                    console.warn("cobalt rate limit hit (HTTP 429):", text);
+
+                    if (attempt >= MAX_RETRIES) {
+                        cancelAll("cobalt rate limit exceeded multiple times. please try again later.");
+                        return;
+                    }
+
+                    if (countLabel) {
+                        countLabel.textContent = `Rate limit hit, waiting ${BACKOFF_MS / 1000}s…`;
+                    }
+
+                    await sleep(BACKOFF_MS);
+                    if (cancelled) return;
+                    return downloadfrom(videolink, attempt + 1);
+                }
+
                 console.error("cobalt returned status:", response.status, text);
                 cancelAll(`cobalt returned an error: ${response.status}\n${text || "No response body"}`);
                 return;
@@ -132,6 +157,22 @@
             if (data.status === "error") {
                 const code = data?.error?.code || "unknown_error";
                 console.log(`can't download ${videolink}: ${code}`);
+
+                if (code === "error.api.rate_exceeded") {
+                    if (attempt >= MAX_RETRIES) {
+                        cancelAll("cobalt rate limit exceeded multiple times. please try again later.");
+                        return;
+                    }
+
+                    if (countLabel) {
+                        countLabel.textContent = `Rate limit hit, waiting ${BACKOFF_MS / 1000}s…`;
+                    }
+
+                    await sleep(BACKOFF_MS);
+                    if (cancelled) return;
+                    return downloadfrom(videolink, attempt + 1);
+                }
+
                 cancelAll(`cobalt failed to download video ${videolink} because:\n${code}`);
                 return;
             }

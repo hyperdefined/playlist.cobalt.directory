@@ -380,7 +380,6 @@
             disableControls();
             downloadbutton.innerText = "...";
 
-            showStatus();
             setProgress(0);
             if (currentFilenameLabel) currentFilenameLabel.textContent = "";
 
@@ -409,6 +408,8 @@
                 hideStatus();
                 return;
             }
+
+            showStatus();
 
             for (let i = 0; i < videolinks.length; i++) {
                 if (cancelled) break; // user cancelled or error triggered

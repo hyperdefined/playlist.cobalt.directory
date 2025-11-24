@@ -1,9 +1,14 @@
 import { Client } from "youtubei";
 import { Soundcloud } from "soundcloud.ts";
 import type { RequestHandler } from "@sveltejs/kit";
+import { env } from "$env/dynamic/private";
 
 const youtube = new Client();
 const soundcloud = new Soundcloud();
+
+const MAX_ITEMS = Number(env.MAX_ITEMS);
+const PLAYLIST_LIMIT =
+  Number.isFinite(MAX_ITEMS) && MAX_ITEMS > 0 ? MAX_ITEMS : 30;
 
 const errorMessages = {
   noLink: "you forgot about the link!",
@@ -48,6 +53,13 @@ async function getYouTubeVideos(playlistId: string): Promise<VideoListResult> {
 
   await playlist.videos.next(0);
 
+  if (playlist.videoCount > PLAYLIST_LIMIT) {
+    return errorResponse(
+      `this playlist has ${playlist.videoCount} videos, the limit is ${PLAYLIST_LIMIT}`,
+      400,
+    );
+  }
+
   const urls = playlist.videos.items.map((vid) => `https://youtu.be/${vid.id}`);
   return urls;
 }
@@ -58,6 +70,13 @@ async function getSoundcloudTracks(
   const playlist = await soundcloud.playlists.get(playlistUrl);
   if (!playlist) {
     return errorResponse(errorMessages.invalidLink, 400);
+  }
+
+  if (playlist.tracks.length > PLAYLIST_LIMIT) {
+    return errorResponse(
+      `this playlist has ${playlist.tracks.length} tracks, the limit is ${PLAYLIST_LIMIT}`,
+      400,
+    );
   }
 
   const urls = playlist.tracks.map((track) => track.permalink_url);

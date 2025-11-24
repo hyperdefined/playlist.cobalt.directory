@@ -73,3 +73,4 @@ afterwards, edit the env to your desire. start with `npm run dev`.
 | `COBALT_API_KEY`            | the api key to your cobalt api                                                                               |
 | `COBALT_API`                | the full URL to your cobalt api, include `https://`                                                          |
 | `PUBLIC_COBALT_API_DISPLAY` | on the homepage, display this as the cobalt backend. this tells users which instance it's pulling media from |
+| `MAX_ITEMS`                 | limit how long a playlist can be to download                                                                 |

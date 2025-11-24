@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.9",
+    "jszip": "^3.10.1",
     "soundcloud.ts": "^0.6.2"
   }
 }

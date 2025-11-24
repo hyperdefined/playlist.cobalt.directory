@@ -1,17 +1,32 @@
 <script>
     import { onMount } from 'svelte';
+    import JSZip from 'jszip';
 
     onMount(() => {
         const playlistinput = document.querySelector("#playlistid");
         const downloadbutton = document.querySelector("#download");
         const clearinput = document.querySelector("#clear");
         const modeButtons = document.querySelectorAll("#mode-buttons button");
+        const downloadModeButtons = document.querySelectorAll("#download-mode-buttons button");
         let selectedMode = "video";
+        let downloadMode = "individual";
 
         const countLabel = document.querySelector("#download-count");
         const progressBar = document.querySelector("#progress-bar");
         const statusContainer = document.querySelector("#download-status");
         const currentFilenameLabel = document.querySelector("#current-filename");
+
+        function updateControls() {
+            const value = playlistinput.value.trim();
+
+            if (value.length > 0) {
+                clearinput.style.display = "unset";
+                downloadbutton.style.display = isValidPlaylistUrl(value) ? "unset" : "none";
+            } else {
+                clearinput.style.display = "none";
+                downloadbutton.style.display = "none";
+            }
+        }
 
         function setProgress(percent) {
             if (!progressBar) return;
@@ -29,6 +44,37 @@
             if (countLabel) countLabel.textContent = "";
             if (currentFilenameLabel) currentFilenameLabel.textContent = "";
             setProgress(0);
+        }
+
+        function disableControls() {
+            downloadbutton.disabled = true;
+            playlistinput.disabled = true;
+
+            modeButtons.forEach(btn => btn.disabled = true);
+            downloadModeButtons.forEach(btn => btn.disabled = true);
+        }
+
+        function enableControls() {
+            downloadbutton.disabled = false;
+            playlistinput.disabled = false;
+
+            modeButtons.forEach(btn => btn.disabled = false);
+            downloadModeButtons.forEach(btn => btn.disabled = false);
+        }
+
+        function cancelAll(reason) {
+            cancelled = true;
+            downloadedFiles = [];
+
+            enableControls();
+            downloadbutton.innerText = ">>";
+
+            hideStatus();
+
+            playlistinput.value = "";
+            updateControls();
+
+            alert(reason);
         }
 
         function isValidPlaylistUrl(input) {
@@ -57,6 +103,41 @@
             return false;
         }
 
+        async function makeZip() {
+            if (!downloadedFiles.length) return;
+
+            const zip = new JSZip();
+
+            for (const { filename, blob } of downloadedFiles) {
+                zip.file(filename, blob);
+            }
+
+            if (countLabel) {
+                countLabel.textContent = `Zipping ${downloadedFiles.length} file${downloadedFiles.length > 1 ? 's' : ''}…`;
+            }
+            setProgress(0);
+
+            const zipBlob = await zip.generateAsync(
+                { type: "blob" },
+                (metadata) => {
+                    const percent = Math.round(metadata.percent);
+                    setProgress(percent);
+                    if (countLabel) {
+                        countLabel.textContent = `Zipping… ${percent}%`;
+                    }
+                }
+            );
+
+            const zipUrl = URL.createObjectURL(zipBlob);
+            const a = document.createElement("a");
+            a.href = zipUrl;
+            a.download = "media.zip";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(zipUrl);
+        }
+
         modeButtons.forEach(btn => {
             btn.addEventListener("click", () => {
                 modeButtons.forEach(b => b.classList.remove("selected"));
@@ -66,7 +147,7 @@
             });
         });
 
-        clearinput.addEventListener('click', function () {
+        clearinput.addEventListener("click", function () {
             playlistinput.value = "";
 
             if (downloadbutton.disabled) {
@@ -80,10 +161,12 @@
                     }
                 }
 
-                downloadbutton.disabled = false;
+                enableControls();
                 downloadbutton.innerText = ">>";
                 hideStatus();
             }
+
+            updateControls();
         });
 
         downloadbutton.addEventListener("click", () => {
@@ -111,15 +194,16 @@
         });
 
         playlistinput.addEventListener("input", () => {
-            const value = playlistinput.value.trim();
+            updateControls();
+        });
 
-            if (value.length > 0) {
-                clearinput.style.display = "unset";
-                downloadbutton.style.display = isValidPlaylistUrl(value) ? "unset" : "none";
-            } else {
-                clearinput.style.display = "none";
-                downloadbutton.style.display = "none";
-            }
+        downloadModeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                downloadModeButtons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                downloadMode = btn.dataset.downloadMode || "individual";
+            });
         });
 
         function safeDecode(str) {
@@ -135,6 +219,7 @@
         }
 
         let cancelled = false;
+        let downloadedFiles = [];
         let currentDownloadAbortController = null;
 
         async function downloadfrom(videolink = "", attempt = 1) {
@@ -333,40 +418,31 @@
                 setProgress(100);
             }
 
-            if (cancelled) {
-                console.log("Cancelled after download; skipping save");
-                return;
-            }
-
             const blob = new Blob(chunks);
-            const objectUrl = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = objectUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
 
-            URL.revokeObjectURL(objectUrl);
-            console.log(`finished downloading ${videolink} -> ${filename}`);
+            if (downloadMode === "zip") {
+                downloadedFiles.push({ filename, blob });
+                console.log(`queued ${videolink} -> ${filename} for zip`);
+            } else {
+                const objectUrl = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = objectUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+
+                URL.revokeObjectURL(objectUrl);
+                console.log(`finished downloading ${videolink} -> ${filename}`);
+            }
             currentDownloadAbortController = null;
-        }
-
-        function cancelAll(reason) {
-            cancelled = true;
-
-            downloadbutton.disabled = false;
-            downloadbutton.innerText = ">>";
-
-            hideStatus();
-
-            alert(reason);
         }
 
         async function startDownloading() {
             cancelled = false;
+            downloadedFiles = [];
 
-            downloadbutton.disabled = true;
+            disableControls();
             downloadbutton.innerText = "...";
 
             showStatus();
@@ -386,15 +462,16 @@
                 downloadbutton.innerText = "!!";
                 setTimeout(() => {
                     downloadbutton.innerText = ">>";
-                    downloadbutton.disabled = false;
+                    enableControls();
+                    hideStatus();
                 }, 1000);
                 return;
             }
 
             if (!Array.isArray(videolinks)) {
                 alert("Server did not return a list of videos.");
-                downloadbutton.disabled = false;
-                downloadbutton.innerText = ">>";
+                enableControls();
+                hideStatus();
                 return;
             }
 
@@ -413,11 +490,44 @@
             }
 
             if (!cancelled) {
+                if (downloadMode === "zip") {
+                    await makeZip();
+                    downloadedFiles = [];
+                }
+
                 hideStatus();
                 downloadbutton.innerText = ">>";
-                downloadbutton.disabled = false;
+                enableControls();
+
+                playlistinput.value = "";
+                updateInputControls();
             }
         }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                if (downloadbutton.disabled) {
+                    cancelled = true;
+
+                    if (currentDownloadAbortController) {
+                        try {
+                            currentDownloadAbortController.abort();
+                        } catch (err) {
+                            console.warn("Abort failed:", err);
+                        }
+                    }
+
+                    enableControls();
+                    downloadbutton.innerText = ">>";
+                    hideStatus();
+
+                    playlistinput.value = "";
+                    updateControls();
+
+                    console.log("Download canceled via Escape key.");
+                }
+            }
+        });
 
         downloadbutton.focus();
     });
@@ -446,6 +556,10 @@
         <div id="mode-buttons">
             <button data-mode="video" class="selected">video</button>
             <button data-mode="audio">audio</button>
+        </div>
+        <div id="download-mode-buttons">
+            <button data-download-mode="individual" class="selected">download each</button>
+            <button data-download-mode="zip">zip playlist</button>
         </div>
         <div id="download-status">
             <div id="download-count"></div>

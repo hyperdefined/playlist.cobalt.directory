@@ -3,7 +3,8 @@
     import JSZip from 'jszip';
     import { env } from '$env/dynamic/public';
 
-    const COBALT_API_DISPLAY = env.PUBLIC_COBALT_API_DISPLAY ;
+    const COBALT_API_DISPLAY = env.PUBLIC_COBALT_API_DISPLAY;
+    const HYPER_ANALYTICS = env.PUBLIC_HYPER_ANALYTICS; // this is for my own copy, it's not present on others
 
     onMount(() => {
         const playlistinput = document.querySelector("#playlistid");
@@ -537,7 +538,12 @@
     });
 </script>
 
-<header></header>
+<svelte:head>
+    {#if HYPER_ANALYTICS}
+        <script defer data-domain="playlist.cobalt.directory" src="https://plausible.canine.tools/js/script.js"></script>
+    {/if}
+</svelte:head>
+
 <div id="con">
     <h1>cobalt playlist downloader</h1>
     <p>this site is very experimental! this site is a fork of <a href="https://codeberg.org/kwiat/playlist">kwiat's playlist downloader</a> with fixes and improvements.</p>

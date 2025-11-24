@@ -85,7 +85,8 @@ footer {
   padding-bottom: 12px;
 }
 
-#mode-buttons, #download-mode-buttons {
+#mode-buttons,
+#download-mode-buttons {
   margin-top: 14px;
   display: inline-flex;
   background-color: #111;
@@ -94,7 +95,8 @@ footer {
   gap: 0;
 }
 
-#mode-buttons button, #download-mode-buttons button {
+#mode-buttons button,
+#download-mode-buttons button {
   background: transparent;
   border: none;
   color: #ccc;
@@ -107,11 +109,13 @@ footer {
     color 0.15s ease;
 }
 
-#mode-buttons button:hover, #download-mode-buttons button:hover {
+#mode-buttons button:hover,
+#download-mode-buttons button:hover {
   background: #222;
 }
 
-#mode-buttons button.selected, #download-mode-buttons button.selected {
+#mode-buttons button.selected,
+#download-mode-buttons button.selected {
   background: #eee;
   color: #000;
 }
@@ -156,9 +160,9 @@ label {
 }
 
 #current-filename {
-    margin-top: 6px;
-    font-size: 0.85rem;
-    opacity: 0.8;
-    text-align: center;
-    word-break: break-all;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  text-align: center;
+  word-break: break-all;
 }

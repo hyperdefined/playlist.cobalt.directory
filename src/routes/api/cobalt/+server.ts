@@ -7,9 +7,16 @@ export async function POST({ request, fetch }) {
   if (!COBALT_API_KEY) {
     console.error("COBALT_API_KEY is not set!!");
     return json(
-            { status: "error", error: { code: "missing_api_key", message: "COBALT_API_KEY is missing, unable to make any requests to cobalt." } },
-            { status: 500 }
-        );
+      {
+        status: "error",
+        error: {
+          code: "missing_api_key",
+          message:
+            "COBALT_API_KEY is missing, unable to make any requests to cobalt.",
+        },
+      },
+      { status: 500 },
+    );
   }
 
   const payload = await request.json();

@@ -381,7 +381,7 @@
             if (currentFilenameLabel) currentFilenameLabel.textContent = "";
 
             const playlisturl = playlistinput.value;
-            const response = await fetch("/getvideos?url=" + playlisturl);
+            const response = await fetch("/getlinks?url=" + playlisturl);
 
             let videolinks = {};
             const responsetext = await response.text();

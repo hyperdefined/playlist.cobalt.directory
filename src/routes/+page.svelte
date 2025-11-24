@@ -8,13 +8,54 @@
         const clearinput = document.querySelector("#clear");
         const modeButtons = document.querySelectorAll("#mode-buttons button");
         const downloadModeButtons = document.querySelectorAll("#download-mode-buttons button");
-        let selectedMode = "video";
-        let downloadMode = "individual";
-
         const countLabel = document.querySelector("#download-count");
         const progressBar = document.querySelector("#progress-bar");
         const statusContainer = document.querySelector("#download-status");
         const currentFilenameLabel = document.querySelector("#current-filename");
+
+        let selectedMode = "video";
+        let downloadMode = "individual";
+        let cancelled = false;
+        let downloadedFiles = [];
+        let currentDownloadAbortController = null;
+
+        function safeDecode(str) {
+            try {
+                return decodeURIComponent(str);
+            } catch {
+                return str;
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise((resolve) => setTimeout(resolve, ms));
+        }
+
+        function isValidPlaylistUrl(input) {
+            if (!input || !input.startsWith("https://")) return false;
+
+            let url;
+            try {
+                url = new URL(input);
+            } catch {
+                return false;
+            }
+
+            const host = url.hostname.toLowerCase();
+
+            if (
+                host.includes("youtube.com") ||
+                host.includes("youtu.be")
+            ) {
+                return url.searchParams.has("list");
+            }
+
+            if (host.includes("soundcloud.com")) {
+                return url.pathname.includes("/sets/");
+            }
+
+            return false;
+        }
 
         function updateControls() {
             const value = playlistinput.value.trim();
@@ -77,32 +118,6 @@
             alert(reason);
         }
 
-        function isValidPlaylistUrl(input) {
-            if (!input || !input.startsWith("https://")) return false;
-
-            let url;
-            try {
-                url = new URL(input);
-            } catch {
-                return false;
-            }
-
-            const host = url.hostname.toLowerCase();
-
-            if (
-                host.includes("youtube.com") ||
-                host.includes("youtu.be")
-            ) {
-                return url.searchParams.has("list");
-            }
-
-            if (host.includes("soundcloud.com")) {
-                return url.pathname.includes("/sets/");
-            }
-
-            return false;
-        }
-
         async function makeZip() {
             if (!downloadedFiles.length) return;
 
@@ -137,90 +152,6 @@
             a.remove();
             URL.revokeObjectURL(zipUrl);
         }
-
-        modeButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                modeButtons.forEach(b => b.classList.remove("selected"));
-                btn.classList.add("selected");
-
-                selectedMode = btn.dataset.mode;
-            });
-        });
-
-        clearinput.addEventListener("click", function () {
-            playlistinput.value = "";
-
-            if (downloadbutton.disabled) {
-                cancelled = true;
-
-                if (currentDownloadAbortController) {
-                    try {
-                        currentDownloadAbortController.abort();
-                    } catch (e) {
-                        console.warn("Abort failed:", e);
-                    }
-                }
-
-                enableControls();
-                downloadbutton.innerText = ">>";
-                hideStatus();
-            }
-
-            updateControls();
-        });
-
-        downloadbutton.addEventListener("click", () => {
-            const value = playlistinput.value.trim();
-
-            if (!isValidPlaylistUrl(value)) {
-                alert("Please enter a valid YouTube or SoundCloud playlist link.");
-                return;
-            }
-
-            startDownloading();
-        });
-
-        playlistinput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") {
-                const value = playlistinput.value.trim();
-
-                if (!isValidPlaylistUrl(value)) {
-                    alert("Please enter a valid YouTube or SoundCloud playlist link.");
-                    return;
-                }
-
-                startDownloading();
-            }
-        });
-
-        playlistinput.addEventListener("input", () => {
-            updateControls();
-        });
-
-        downloadModeButtons.forEach(btn => {
-            btn.addEventListener("click", () => {
-                downloadModeButtons.forEach(b => b.classList.remove("selected"));
-                btn.classList.add("selected");
-
-                downloadMode = btn.dataset.downloadMode || "individual";
-            });
-        });
-
-        function safeDecode(str) {
-            try {
-                return decodeURIComponent(str);
-            } catch {
-                return str;
-            }
-        }
-
-        function sleep(ms) {
-            return new Promise((resolve) => setTimeout(resolve, ms));
-        }
-
-        let cancelled = false;
-        let downloadedFiles = [];
-        let currentDownloadAbortController = null;
 
         async function downloadfrom(videolink = "", attempt = 1) {
             const MAX_RETRIES = 3;
@@ -504,6 +435,74 @@
             }
         }
 
+        modeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                modeButtons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                selectedMode = btn.dataset.mode;
+            });
+        });
+
+        clearinput.addEventListener("click", function () {
+            playlistinput.value = "";
+
+            if (downloadbutton.disabled) {
+                cancelled = true;
+
+                if (currentDownloadAbortController) {
+                    try {
+                        currentDownloadAbortController.abort();
+                    } catch (e) {
+                        console.warn("Abort failed:", e);
+                    }
+                }
+
+                enableControls();
+                downloadbutton.innerText = ">>";
+                hideStatus();
+            }
+
+            updateControls();
+        });
+
+        downloadbutton.addEventListener("click", () => {
+            const value = playlistinput.value.trim();
+
+            if (!isValidPlaylistUrl(value)) {
+                alert("Please enter a valid YouTube or SoundCloud playlist link.");
+                return;
+            }
+
+            startDownloading();
+        });
+
+        playlistinput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                const value = playlistinput.value.trim();
+
+                if (!isValidPlaylistUrl(value)) {
+                    alert("Please enter a valid YouTube or SoundCloud playlist link.");
+                    return;
+                }
+
+                startDownloading();
+            }
+        });
+
+        playlistinput.addEventListener("input", () => {
+            updateControls();
+        });
+
+        downloadModeButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                downloadModeButtons.forEach(b => b.classList.remove("selected"));
+                btn.classList.add("selected");
+
+                downloadMode = btn.dataset.downloadMode || "individual";
+            });
+        });
+
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 if (downloadbutton.disabled) {
@@ -529,6 +528,8 @@
             }
         });
 
+
+        updateControls();
         downloadbutton.focus();
     });
 </script>

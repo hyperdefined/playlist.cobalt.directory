@@ -1,7 +1,11 @@
 services:
-  playlist:
-    image: codeberg.org/kwiat/playlist
-    container_name: playlist-downloader
+  cobalt_playlist:
+    image: ghcr.io/hyperdefined/playlist.cobalt.directory:latest
+    restart: unless-stopped
+    container_name: cobalt_playlist
+    environment:
+      - COBALT_API_KEY=xxx
+      - COBALT_API=https://cobalt-backend.canine.tools
+      - PUBLIC_COBALT_API_DISPLAY=cobalt.canine.tools
     ports:
-      # replace the first 3000 to change the port it's running on
-      - "3000:3000"
+      - 127.0.0.1:3000:3000 # reverse proxy to port 3000, change the first port if it's taken

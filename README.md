@@ -1,8 +1,6 @@
 # cobalt playlist downloader
 
-a lot of people have been asking for this, so i made it. paste the link, download the first file, allow multiple file downloads if you didn't do that before and keep saving files until it finishes.
-
-due to limitations, it can only download audio for now. i might host multiple instances to bypass them, but i'll need to finally set up cookies, which i can't really do right now.
+this is a fork of [kwiat's cobalt playlist downloader](https://codeberg.org/kwiat/playlist).
 
 ## supported services
 
@@ -11,12 +9,12 @@ due to limitations, it can only download audio for now. i might host multiple in
 
 ## api
 
-if you want you can use the `/getvideos` endpoint with the `url` parameter being the link to the playlist, e.g. https://www.youtube.com/playlist?list=PLXQAAGoKe2_tobF3ioyI86AghVLmhf8wd
+if you want you can use the `/getlinks` endpoint with the `url` parameter being the link to the playlist, e.g. https://www.youtube.com/playlist?list=PLXQAAGoKe2_tobF3ioyI86AghVLmhf8wd
 
 example curl command:
 
 ```shell
-curl https://playlist.kwiatekmiki.pl/getvideos?url=https://www.youtube.com/playlist?list=PLXQAAGoKe2_tobF3ioyI86AghVLmhf8wd
+curl https://playlist.cobalt.directory/getlinks?url=https://www.youtube.com/playlist?list=PLXQAAGoKe2_tobF3ioyI86AghVLmhf8wd
 ```
 
 example response:
@@ -38,31 +36,40 @@ video links are seperated by semicolons
 
 ## how to selfhost
 
+if you want to self host with your own cobalt instance, you can either use docker or npm.
+
+### docker
+
+```yaml
+services:
+  cobalt_playlist:
+    image: ghcr.io/hyperdefined/playlist.cobalt.directory:latest
+    restart: unless-stopped
+    container_name: cobalt_playlist
+    environment:
+      - COBALT_API_KEY=xxx
+      - COBALT_API=https://cobalt-backend.canine.tools
+      - PUBLIC_COBALT_API_DISPLAY=cobalt.canine.tools
+    ports:
+      - 127.0.0.1:3000:3000 # reverse proxy to port 3000, change the first port if it's taken
+```
+
+### npm
+
 ```shell
-git clone https://codeberg.org/kwiat/playlist
-pnpm run build
-node build
+git clone https://github.com/hyperdefined/playlist.cobalt.directory.git
+npm i
+cp .env.example .env
 ```
 
-## Developing
+afterwards, edit the env to your desire. start with `npm run dev`.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+### environment variables
 
-```bash
-npm run dev
+3 environment variables are required
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+| env                         | description                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `COBALT_API_KEY`            | the api key to your cobalt api                                                                               |
+| `COBALT_API`                | the full URL to your cobalt api, include `https://`                                                          |
+| `PUBLIC_COBALT_API_DISPLAY` | on the homepage, display this as the cobalt backend. this tells users which instance it's pulling media from |

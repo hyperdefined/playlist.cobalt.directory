@@ -544,6 +544,7 @@
     {/if}
 </svelte:head>
 
+<header></header>
 <div id="con">
     <h1>cobalt playlist downloader</h1>
     <p>this site is very experimental! this site is a fork of <a href="https://codeberg.org/kwiat/playlist">kwiat's playlist downloader</a> with fixes and improvements.</p>

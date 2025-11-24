@@ -2,6 +2,7 @@ import { env } from "$env/dynamic/private";
 import { json } from "@sveltejs/kit";
 
 const COBALT_API_KEY = env.COBALT_API_KEY;
+const COBALT_API = env.COBALT_API;
 
 export async function POST({ request, fetch }) {
   if (!COBALT_API_KEY) {
@@ -19,9 +20,24 @@ export async function POST({ request, fetch }) {
     );
   }
 
+  if (!COBALT_API) {
+    console.error("COBALT_API is not set!!");
+    return json(
+      {
+        status: "error",
+        error: {
+          code: "missing_api",
+          message:
+            "COBALT_API is missing, unable to make any requests to cobalt.",
+        },
+      },
+      { status: 500 },
+    );
+  }
+
   const payload = await request.json();
 
-  const cobaltRes = await fetch("https://cobalt-backend.canine.tools", {
+  const cobaltRes = await fetch(COBALT_API, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

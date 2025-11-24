@@ -1,6 +1,9 @@
 <script>
     import { onMount } from 'svelte';
     import JSZip from 'jszip';
+    import { env } from '$env/dynamic/public';
+
+    const COBALT_API_DISPLAY = env.PUBLIC_COBALT_API_DISPLAY ;
 
     onMount(() => {
         const playlistinput = document.querySelector("#playlistid");
@@ -538,7 +541,7 @@
 <div id="con">
     <h1>cobalt playlist downloader</h1>
     <p>this site is very experimental! this site is a fork of <a href="https://codeberg.org/kwiat/playlist">kwiat's playlist downloader</a> with fixes and improvements.</p>
-    <p>supports <strong>youtube</strong> and <strong>soundcloud</strong> playlists. uses <strong>cobalt.canine.tools</strong> as the cobalt api.</p>
+    <p>supports <strong>youtube</strong> and <strong>soundcloud</strong> playlists. uses <strong>{COBALT_API_DISPLAY}</strong> as the cobalt api.</p>
     <hr>
     <p>!!! VIDEOS/AUDIOS MIGHT BE BROKEN !!!</p>
     <p>cobalt encodes the video/audio data via web. this tool downloads right from the api, which skips this part. playback of media will be broken, visit <a href="https://cobalt.tools">cobalt.tools</a> and use the remux tab to fix.</p>

@@ -20,7 +20,7 @@
     "svelte-check": "^4.3.4",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",
-    "youtubei": "^1.8.0"
+    "youtubei": "^1.8.2"
   },
   "dependencies": {
     "@sveltejs/adapter-node": "^5.2.9",

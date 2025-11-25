@@ -46,8 +46,8 @@ importers:
         specifier: ^7.2.4
         version: 7.2.4(@types/node@24.10.1)
       youtubei:
-        specifier: ^1.8.0
-        version: 1.8.0
+        specifier: ^1.8.2
+        version: 1.8.2
 
 packages:
 
@@ -879,8 +879,8 @@ packages:
   whatwg-url@5.0.0:
     resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
 
-  youtubei@1.8.0:
-    resolution: {integrity: sha512-/+qwiyrFQ8+b5N8z4QbGOeP8FR4bsz9lvg631DzwbRp4Wbm4uFbe5h7n08DoP38KoJrNFgNdKhcEmSr9aoCX7g==}
+  youtubei@1.8.2:
+    resolution: {integrity: sha512-OMx6qasBOnRvoob85JAoaW1M5zUqdmChxr8fCoUPTAPOn4a3E8+LL4UxchgZ2FTL/RRELhvK02IMjCELl8LTDg==}
 
   zimmerframe@1.1.4:
     resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
@@ -1569,7 +1569,7 @@ snapshots:
       tr46: 0.0.3
       webidl-conversions: 3.0.1
 
-  youtubei@1.8.0:
+  youtubei@1.8.2:
     dependencies:
       node-fetch: 2.6.7
       protobufjs: 7.2.6

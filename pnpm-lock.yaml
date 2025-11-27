@@ -28,11 +28,11 @@ importers:
         specifier: ^6.2.1
         version: 6.2.1(svelte@5.44.1)(vite@7.2.4(@types/node@24.10.1))
       prettier:
-        specifier: ^3.6.2
-        version: 3.6.2
+        specifier: ^3.7.0
+        version: 3.7.0
       prettier-plugin-svelte:
         specifier: ^3.4.0
-        version: 3.4.0(prettier@3.6.2)(svelte@5.44.1)
+        version: 3.4.0(prettier@3.7.0)(svelte@5.44.1)
       svelte:
         specifier: ^5.44.1
         version: 5.44.1
@@ -727,8 +727,8 @@ packages:
       prettier: ^3.0.0
       svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
 
-  prettier@3.6.2:
-    resolution: {integrity: sha512-I7AIg5boAr5R0FFtJ6rCfD+LFsWHp81dolrFD8S79U9tb8Az2nGrJncnMSnys+bpQJfRUzqs9hnA81OAA3hCuQ==}
+  prettier@3.7.0:
+    resolution: {integrity: sha512-pBiBj/gjRY9Qpk1b7cDda6Rbwvkaggos779AHQ0Ek/odwDx6xG6DRBxtnp1QmxbuD7pAO8/SQ8vuhtGv9LoLWA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -1380,12 +1380,12 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  prettier-plugin-svelte@3.4.0(prettier@3.6.2)(svelte@5.44.1):
+  prettier-plugin-svelte@3.4.0(prettier@3.7.0)(svelte@5.44.1):
     dependencies:
-      prettier: 3.6.2
+      prettier: 3.7.0
       svelte: 5.44.1
 
-  prettier@3.6.2: {}
+  prettier@3.7.0: {}
 
   process-nextick-args@2.0.1: {}
 

@@ -15,8 +15,8 @@ importers:
         specifier: ^3.10.1
         version: 3.10.1
       soundcloud.ts:
-        specifier: ^0.7.0
-        version: 0.7.0
+        specifier: ^0.7.1
+        version: 0.7.1
     devDependencies:
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
@@ -777,8 +777,8 @@ packages:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
 
-  soundcloud.ts@0.7.0:
-    resolution: {integrity: sha512-e/T75iOga/qD4PRUEL2dQ9xpZBjip2HE7kX2ZmgmU7fhr1444DujX6cIXAWRcmjtfEuAGzJt6G8wzoygq3BLVA==}
+  soundcloud.ts@0.7.1:
+    resolution: {integrity: sha512-2K4Rm4rZ6b75Zc3ivd4OY66eG8ZesWaAnOKMREQzezSt46pTFjY4WiBxm2c7NnJtSNSNNRPHa5SfmZWH8iGvJA==}
 
   source-map-js@1.2.1:
     resolution: {integrity: sha512-UXWMKhLOwVKb728IUtQPXxfYU+usdybtUrK/8uGE8CQMvrhOpwvzDBwj0QhSL7MQc7vIsISBG8VQ8+IDQxpfQA==}
@@ -1490,7 +1490,7 @@ snapshots:
       mrmime: 2.0.1
       totalist: 3.0.1
 
-  soundcloud.ts@0.7.0:
+  soundcloud.ts@0.7.1:
     dependencies:
       browser-id3-writer: 6.3.1
 

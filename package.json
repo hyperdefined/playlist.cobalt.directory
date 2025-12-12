@@ -19,7 +19,7 @@
     "svelte": "^5.45.10",
     "svelte-check": "^4.3.4",
     "typescript": "^5.9.3",
-    "vite": "^7.2.4",
+    "vite": "^7.2.7",
     "youtubei": "^1.8.3"
   },
   "dependencies": {
